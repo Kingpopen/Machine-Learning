@@ -64,6 +64,46 @@ class Model:
             wrong_count = 0
         return {'w': self.w, 'b': self.b}
 
+
+    # 对偶形式的SGD
+    def SGD2(self, X_train, Y_train):
+        # 数据初始化
+        self.x_data = X_train
+        self.y_data = Y_train
+        self.w = np.zeros(len(X_train[0]), dtype= np.float32)
+        self.b = 0
+        alpha = np.zeros(len(X_train))
+        # Gram矩阵的shape is N*N
+        Gram = np.dot(X_train, np.transpose(X_train))
+        flag = True
+        wrong_count = 0
+
+
+        while flag:
+            for i in range(len(X_train)):
+                temp = 0
+    #            判断是否为误分类点
+                for j in range(len(X_train)):
+                   temp += alpha[j]*Y_train[j]*Gram[i][j]
+
+                if (temp+self.b)*Y_train[i] <= 0:
+                    alpha[i] += self.lr
+                    self.b += self.lr*Y_train[i]
+                    wrong_count += 1
+
+            if wrong_count == 0:
+                flag = False
+            wrong_count = 0
+
+        for i in range(len(X_train)):
+            self.w += alpha[i]*X_train[i]*Y_train[i]
+
+        return {'w': self.w, 'b': self.b}
+
+
+
+
+
     def plot(self):
         x = np.linspace(4, 7, 100)
         y = (self.w[0]*x + self.b)/-self.w[1]
@@ -83,4 +123,9 @@ if __name__ == '__main__':
     b = result['b']
     print("w:", w)
     print("b:", b)
+    # model.plot()
+
+    result = model.SGD2(X_train, Y_train)
+    print("w:", result['w'])
+    print("b:", result['b'])
     model.plot()
